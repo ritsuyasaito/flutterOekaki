@@ -11,6 +11,8 @@ import 'package:flutter/rendering.dart';
 import 'package:simple_oekaki/screens/paper_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 
 Image image1;
@@ -53,7 +55,7 @@ class StrokesModel extends ChangeNotifier {
 
     //var image  = await _convertWidgetToImage();
     image1 = await _convertWidgetToImage();
-    print(image1);
+    //print(image1);
     print('7777');
 
     setState(() {
@@ -66,6 +68,14 @@ class StrokesModel extends ChangeNotifier {
 
     });
   }
+
+  static Future get localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    print("--");
+   // print(directory);
+    return directory.path;
+  }
+
   Future<Image> _convertWidgetToImage() async {
     try {
       RenderRepaintBoundary boundary = globalKey.currentContext.findRenderObject();
@@ -76,15 +86,25 @@ class StrokesModel extends ChangeNotifier {
       var pngBytes = byteData.buffer.asUint8List();
       // final _base64 = base64.encode(utf8.encode(pngBytes.toString()));
       final _base64 = base64Encode(pngBytes);
+      var url = 'data:image/png;base64,' + _base64;
 
 
       print('####');
-      print(byteData.elementSizeInBytes);
-      print(byteData.hashCode);
 
+      toSlackHook(url);
       print(_base64);
-      _onImageShareButtonPressed(_base64);
+      //_onImageShareButtonPressed(_base64);
       print('####');
+      //_onImageShareButtonPressed(byteData.toString());
+
+//      final path = await localPath;
+//      final imagePath = '$path/image.png';
+//      print("----");
+      //print(imagePath);
+//      File imageFile = File(imagePath);
+//      var savedFile = await imageFile.writeAsBytes(await pngBytes);
+//      var bytes = savedFile.readAsBytesSync();
+//      _onImageShareButtonPressed(bytes);
       return Image.memory(pngBytes);
 
     } catch (e) {
@@ -95,21 +115,63 @@ class StrokesModel extends ChangeNotifier {
     return null;
   }
 
+
+
+  void toSlackHook(url) async {
+    var slackPostUrl = "https://hooks.slack.com/services/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";
+
+//    var postJson = {
+//      "text": "これはりつや"
+//      };
+
+    var postJson = {
+      "text": "テストです",
+      "text": url,
+      "image_url": url.toString()
+
+    };
+    print(url);
+
+    var response = await http.post(slackPostUrl, body: json.encode(postJson));
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    //print(response);
+//    print('Response status: ${response.statusCode}');
+//    print('Response body: ${response.body}');
+
+  }
+
+  void toSlack(String filename, String url) async {
+  var request = http.MultipartRequest('POST', Uri.parse(url));
+  request.files.add(
+  http.MultipartFile(
+  'picture',
+  File(filename).readAsBytes().asStream(),
+  File(filename).lengthSync(),
+  filename: filename.split("/").last
+  )
+  );
+  var res = await request.send();
+}
+
   void _onImageShareButtonPressed(strData) async {
-
-
 
     var url = 'https://slack.com/api/chat.postMessage';
 
-    var response = await http.post(url, body: {"token": "xoxb-776555160532-1124375822880-e75Ln4WN724Y69icGXSlW8O5",
+    var response = await http.post(url, body: {"token": "xoxb-776555160532-1124375822880-s51o1VUCMCAhhUHCkqyvr1Ob",
       "channel": "CNG74R4G2",
-      
-      "attachments": strData});
+      "text": "これはりつや",
+      "image": strData});
+
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
 
 
   }
+
+
 
 //**  4. ボタンが押された際の処理 statefulにかく
   void exportToImage() async {
