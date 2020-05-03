@@ -101,9 +101,10 @@ class StrokesModel extends ChangeNotifier {
 
     var url = 'https://slack.com/api/chat.postMessage';
 
-    var response = await http.post(url, body: {"token": "xoxb-776555160532-1124375822880-dW6DypgGhMPkZfNN6CQP2Cd9",
+    var response = await http.post(url, body: {"token": "xoxb-776555160532-1124375822880-e75Ln4WN724Y69icGXSlW8O5",
       "channel": "CNG74R4G2",
-      "text": strData});
+      
+      "attachments": strData});
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
 
